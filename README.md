@@ -18,4 +18,10 @@ Contributors:
 - [Yanghun Tay](http://github.com/yangshun)
 - [Emmanuel Goh](http://github.com/emman27)
 
-fork 2021-03
+==
+qiaork
+
+forked 2021-03.
+
+add autoplay.py(which replaces puzzle.py) to play 2048 by computer itself:
+    $ python3 autoplay.py
