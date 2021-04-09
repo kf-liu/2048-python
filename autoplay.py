@@ -20,12 +20,13 @@ class GameGrid():
         self.history_matrixs.append(self.matrix)
         self.history_matrixs.append(self.matrix)
         self.score = 0
-        print(self.matrix)
         
         # prepare game strategy
         strtg = strtg.split(".")
         for n, s in enumerate(strtg):
             strtg[n] = int(s)
+        strtg.append(0)
+        strtg.append(0)
 
         self.dir = []
         self.dirs = [c.KEY_UP, c.KEY_LEFT, c.KEY_RIGHT, c.KEY_DOWN]
@@ -48,7 +49,6 @@ class GameGrid():
                 # for strategy1.4 serpentine(snakelike), when change direction
                 if strtg[1] == 4 and self.matrix[0][0] == 256 and self.matrix[0][c.GRID_LEN - 1] != 0:
                     self.set_dir([c.KEY_UP, c.KEY_RIGHT])
-                    print("dirs change 256")
                 # for strategy1, when invalid direction
                 d = self.dup()
                 if d == False:
@@ -60,10 +60,9 @@ class GameGrid():
                     d = self.dirs[random.randint(0,len(self.dirs)-1)]
             # key down
             state = self.key_down(d)
-            print(self.matrix, state)
             if state != 'not over':
                 break  # game over
-        self.record()
+        self.record(strtg)
         print(strtg)
         return
 
@@ -85,7 +84,6 @@ class GameGrid():
     def dup(self):
         if self.matrix == self.history_matrixs[-2]:  # duplicate
             self.history_dir = self.history_dir + 1
-            print("    ", self.history_dir)
             if self.history_dir < len(self.dir):  # try wanted directions
                 d = self.dir[self.history_dir]
             else:  # try other directions
@@ -100,7 +98,6 @@ class GameGrid():
             m, d, n, g = self.commands[d](self.matrix)
             l = [n,g]
             merged.append(l[n_g-1])
-        print(merged)
         for md in merged:
             if md != 0:
                 d = self.dirs[merged.index(max(merged))]
@@ -116,15 +113,21 @@ class GameGrid():
                     max = j
         return max
         
-    def record(self):
+    def record(self, strtg):
         max = self.max()
-        print(max, self.score)
+        csv_writer.writerow([strtg[0], strtg[1], strtg[2], max, self.score])
+        return True
 
+
+f = open('detail.csv','a+',encoding='utf-8')  # count details
+csv_writer = csv.writer(f)
+for i in range(161):
+    print(i)
+    game_grid = GameGrid("0")
+f.close()
 
 if False:
     f = open('total.csv','w',encoding='utf-8')  # count total numbers
     csv_writer = csv.writer(f)
     csv_writer.writerow(["","s","s0","s1","s2","s1.1","s1.2","s1.4","s2.1","s2.2","s2.1.0","s2.1.1","s2.2.0","s2.2.1"])
     f.close()
-
-game_grid = GameGrid()
