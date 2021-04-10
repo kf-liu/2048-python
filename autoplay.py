@@ -8,7 +8,7 @@ import csv
 
 class GameGrid():
 
-    def __init__(self, strtg="1.4"):
+    def __init__(self, strtg="1.4.1"):
 
         # prepare game 2048
 
@@ -31,6 +31,7 @@ class GameGrid():
         self.dir = []
         self.dirs = [c.KEY_UP, c.KEY_LEFT, c.KEY_RIGHT, c.KEY_DOWN]
         self.history_dir = -1
+        self.line = 1
         
         # for strategy1 direction-first
         if strtg[0] == 1:
@@ -47,23 +48,56 @@ class GameGrid():
                 d = self.dirs[random.randint(0,len(self.dirs)-1)]
             elif strtg[0] == 1:
                 # for strategy1.4 serpentine(snakelike), when change direction
-                if strtg[1] == 4 and self.matrix[0][0] == 256 and self.matrix[0][c.GRID_LEN - 1] != 0:
-                    self.set_dir([c.KEY_UP, c.KEY_RIGHT])
+                if strtg[1] == 4 and self.matrix[0][c.GRID_LEN - 1] != 0 and self.matrix[0][0] != 0:
+                    if strtg[2] == 0 and self.matrix[0][0] == 256:
+                        self.set_dir([c.KEY_UP, c.KEY_RIGHT])
+                    if strtg[2] == 1 :
+                        # main direction
+                        if self.matrix[0][c.GRID_LEN - 1] > 8:
+                            if self.matrix[0][0] == 128:
+                                self.set_dir([c.KEY_UP])
+                            elif self.matrix[0][0] == 256:
+                                self.set_dir([c.KEY_UP, c.KEY_RIGHT])
+                            elif self.matrix[0][0] == 512:
+                                self.set_dir([c.KEY_UP, c.KEY_RIGHT])
+                        elif self.matrix[0][c.GRID_LEN - 1] < 4:
+                            self.set_dir([c.KEY_UP])
+                        # consider more lines
+                        if self.matrix[0][0] < 256:
+                            self.line = 1
+                        ##else:
+                            ##self.line = 2
+                        # disoder
+                        for i in range(self.line):
+                            for j in range(c.GRID_LEN - 1):
+                                if self.matrix[i][j] < self.matrix[i][j+1]:
+                                    self.set_dir([c.KEY_UP, c.KEY_LEFT])
+                        if c.KEY_RIGHT in self.dir and self.matrix[0][c.GRID_LEN - 1] < self.matrix[1][c.GRID_LEN - 1]:
+                            self.set_dir([c.KEY_UP])
                 # for strategy1, when invalid direction
                 d = self.dup()
-                if d == False:
+                print("1", d, self.dir)
+                if d == "continue":
+                    continue
+                if d == "not dup":
                     self.history_dir = -1
                     d = self.dir[random.randint(0, len(self.dir)-1)]
+                if d == c.KEY_RIGHT and d in self.dir:
+                    m, done, n, g = self.commands[d](self.matrix)
+                    if m[0][0] == 0:
+                        self.set_dir([c.KEY_UP])
+                        continue
             elif strtg[0] == 2:
                 d = self.more_merged(strtg[1])
-                if d == False:
+                if d == "not dup":
                     d = self.dirs[random.randint(0,len(self.dirs)-1)]
             # key down
+            print("2", d)
             state = self.key_down(d)
+            print(self.matrix)
             if state != 'not over':
                 break  # game over
-        self.record(strtg)
-        print(strtg)
+##        self.record(strtg)
         return
 
     def key_down(self, dir):
@@ -77,6 +111,7 @@ class GameGrid():
         return logic.game_state(self.matrix)
         
     def set_dir(self, dir):
+        self.dirs = [c.KEY_UP, c.KEY_LEFT, c.KEY_RIGHT, c.KEY_DOWN]
         self.dir = dir
         for d in dir:
             self.dirs.remove(d)
@@ -86,11 +121,19 @@ class GameGrid():
             self.history_dir = self.history_dir + 1
             if self.history_dir < len(self.dir):  # try wanted directions
                 d = self.dir[self.history_dir]
+                return d
             else:  # try other directions
+                print(self.history_dir, self.dir, len(self.dir))
                 d = self.dirs[self.history_dir - len(self.dir)]
-            return d
+                print("3", d)
+                if d in [c.KEY_RIGHT, c.KEY_DOWN]:
+                    self.key_down(d)
+                    self.key_down(self.oppo(d))
+                    return "continue"
+                else:
+                    return d
         else:
-            return False
+            return "not dup"
             
     def more_merged(self, n_g):
         merged = []
@@ -117,17 +160,28 @@ class GameGrid():
         max = self.max()
         csv_writer.writerow([strtg[0], strtg[1], strtg[2], max, self.score])
         return True
+    
+    def oppo(self, dir):
+        dirs = [c.KEY_UP, c.KEY_LEFT, c.KEY_DOWN, c.KEY_RIGHT]
+        return dirs[(dirs.index(dir) + 2) % 4]
 
 
-f = open('detail.csv','a+',encoding='utf-8')  # count details
-csv_writer = csv.writer(f)
-for i in range(161):
-    print(i)
-    game_grid = GameGrid("0")
-f.close()
+if False:
+    f = open('detail.csv','a+',encoding='utf-8')  # count details
+    csv_writer = csv.writer(f)
+    ss = ['0', '1.1', '1.2', '1.4', '2.1', '2.2']
+    for s in ss:
+        print(s)
+        for i in range(1000):
+            if i % 100 == 0:
+                print(i)
+            game_grid = GameGrid(s)
+    f.close()
 
 if False:
     f = open('total.csv','w',encoding='utf-8')  # count total numbers
     csv_writer = csv.writer(f)
     csv_writer.writerow(["","s","s0","s1","s2","s1.1","s1.2","s1.4","s2.1","s2.2","s2.1.0","s2.1.1","s2.2.0","s2.2.1"])
     f.close()
+
+game_grid = GameGrid()
