@@ -4,6 +4,7 @@ import logic
 import constants as c
 
 import csv
+import copy
 
 
 class GameGrid():
@@ -30,6 +31,7 @@ class GameGrid():
 
         self.dir = []
         self.dirs = [c.KEY_UP, c.KEY_LEFT, c.KEY_RIGHT, c.KEY_DOWN]
+        self.all_dirs = [c.KEY_UP, c.KEY_LEFT, c.KEY_RIGHT, c.KEY_DOWN]
         self.history_dir = -1
         self.line = 1
         
@@ -74,6 +76,15 @@ class GameGrid():
                                     self.set_dir([c.KEY_UP, c.KEY_LEFT])
                         if c.KEY_RIGHT in self.dir and self.matrix[0][c.GRID_LEN - 1] < self.matrix[1][c.GRID_LEN - 1]:
                             self.set_dir([c.KEY_UP])
+                        # triangle same numbers
+                        for i in range(c.GRID_LEN - 1):
+                            for j in range(c.GRID_LEN - 1):
+                                if self.matrix[i][j] == self.matrix[i][j + 1] and (self.matrix[i][j] == self.matrix[i + 1][j] or self.matrix[i][j] == self.matrix[i + 1][j + 1]):
+                                    if self.matrix[i][j] == 0:
+                                        continue
+                                    print("trangle", i, j)
+                                    self.double_key_down(c.KEY_LEFT, c.KEY_UP)
+                                    d = "continue"
                 # for strategy1, when invalid direction
                 d = self.dup()
                 print("1", d, self.dir)
@@ -109,9 +120,15 @@ class GameGrid():
                 self.matrix = logic.add_two(self.matrix)
             self.history_matrixs.append(self.matrix)
         return logic.game_state(self.matrix)
+    
+    def double_key_down(self, dir1, dir2):
+        print("double", dir1, dir2)
+        self.key_down(dir1)
+        self.key_down(dir2)
+        self.history_dir = -1
         
     def set_dir(self, dir):
-        self.dirs = [c.KEY_UP, c.KEY_LEFT, c.KEY_RIGHT, c.KEY_DOWN]
+        self.dirs = copy.deepcopy(self.all_dirs)
         self.dir = dir
         for d in dir:
             self.dirs.remove(d)
@@ -127,8 +144,7 @@ class GameGrid():
                 d = self.dirs[self.history_dir - len(self.dir)]
                 print("3", d)
                 if d in [c.KEY_RIGHT, c.KEY_DOWN]:
-                    self.key_down(d)
-                    self.key_down(self.oppo(d))
+                    self.double_key_down(d, self.oppo(d))
                     return "continue"
                 else:
                     return d
