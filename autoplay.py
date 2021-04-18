@@ -108,7 +108,7 @@ class GameGrid():
             print(self.matrix)
             if state != 'not over':
                 break  # game over
-##        self.record(strtg)
+        self.record(strtg)
         return
 
     def key_down(self, dir):
@@ -144,6 +144,9 @@ class GameGrid():
                 d = self.dirs[self.history_dir - len(self.dir)]
                 print("3", d)
                 if d in [c.KEY_RIGHT, c.KEY_DOWN]:
+                    m, done, n, g = self.commands[d](self.matrix)
+                    if m == self.matrix:
+                        return d
                     self.double_key_down(d, self.oppo(d))
                     return "continue"
                 else:
@@ -182,13 +185,13 @@ class GameGrid():
         return dirs[(dirs.index(dir) + 2) % 4]
 
 
-if False:
+if True:
     f = open('detail.csv','a+',encoding='utf-8')  # count details
     csv_writer = csv.writer(f)
-    ss = ['0', '1.1', '1.2', '1.4', '2.1', '2.2']
+    ss = ['1.4.1']
     for s in ss:
         print(s)
-        for i in range(1000):
+        for i in range(4000):
             if i % 100 == 0:
                 print(i)
             game_grid = GameGrid(s)
@@ -200,4 +203,4 @@ if False:
     csv_writer.writerow(["","s","s0","s1","s2","s1.1","s1.2","s1.4","s2.1","s2.2","s2.1.0","s2.1.1","s2.2.0","s2.2.1"])
     f.close()
 
-game_grid = GameGrid()
+##game_grid = GameGrid()

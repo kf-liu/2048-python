@@ -5,7 +5,7 @@ import copy
 def count():
 
     # count total numbers
-    strtg = ["", "s", 0, 110, 120, 140, 210, 220]
+    strtg = ["", "s", 0, 110, 120, 140, 141, 210, 220]
     
     max = []
     score = []
